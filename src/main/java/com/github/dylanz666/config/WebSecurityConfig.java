@@ -4,28 +4,23 @@ import com.github.dylanz666.constant.UserTypeEnum;
 import com.github.dylanz666.domain.AuthorizationException;
 import com.github.dylanz666.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.jackson.JsonObjectDeserializer;
-import org.springframework.boot.jackson.JsonObjectSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
-import javax.servlet.Servlet;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
-import java.util.stream.Stream;
 
 /**
  * @author : dylanz
@@ -40,10 +35,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private AuthorizationException authorizationException;
 
     @Override
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring().antMatchers("/static/**");
+    }
+
+    @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .authorizeRequests()
-                .antMatchers("/", "/home.html", "/ping", "/global/**", "/static/**", "/20200907.jpg").permitAll()//这5个url不用访问认证
+                .antMatchers("/", "/home.html", "/ping").permitAll()//这5个url不用访问认证
                 .antMatchers("/admin/**").hasRole(UserTypeEnum.ADMIN.toString())
                 .antMatchers("/user/**").hasRole(UserTypeEnum.USER.toString())
                 .anyRequest()
