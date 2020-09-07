@@ -36,14 +36,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/static/**");
+        web.ignoring().antMatchers("/*.jpg", "/*.png", "/*.css", "/*.js");
     }
 
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .authorizeRequests()
-                .antMatchers("/", "/home.html", "/ping").permitAll()//这5个url不用访问认证
+                .antMatchers("/", "/home.html", "/ping").permitAll()//这3个url不用访问认证
                 .antMatchers("/admin/**").hasRole(UserTypeEnum.ADMIN.toString())
                 .antMatchers("/user/**").hasRole(UserTypeEnum.USER.toString())
                 .anyRequest()
