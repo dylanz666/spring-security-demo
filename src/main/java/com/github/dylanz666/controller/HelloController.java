@@ -10,7 +10,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class HelloController {
     @GetMapping("/hello")
-    public String sayHello() throws Exception {
+    public String sayHello() {
         return "Hello!";
+    }
+
+    @GetMapping("/ping")
+    public String ping() {
+        return "Success!";
+    }
+
+    @GetMapping("/admin/hello")
+    public String adminHello() {
+        return "Hello admin!";
+    }
+
+    @GetMapping("/user/hello")
+    public String userHello() {
+        return "Hello user!";
     }
 }

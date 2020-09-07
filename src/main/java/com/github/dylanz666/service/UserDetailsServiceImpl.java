@@ -1,5 +1,6 @@
 package com.github.dylanz666.service;
 
+import com.github.dylanz666.constant.UserTypeEnum;
 import com.github.dylanz666.domain.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,10 +40,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User firstUser = new User();
         firstUser.setUsername("cherrys");
         firstUser.setPassword(passwordEncoder.encode("123"));
+        firstUser.setUserType(UserTypeEnum.USER.toString());
         userList.add(firstUser);
         User secondUser = new User();
         secondUser.setUsername("randyh");
         secondUser.setPassword(passwordEncoder.encode("456"));
+        secondUser.setUserType(UserTypeEnum.USER.toString());
         userList.add(secondUser);
 
         List<User> mappedUsers = userList.stream().filter(s -> s.getUsername().equals(username)).collect(Collectors.toList());

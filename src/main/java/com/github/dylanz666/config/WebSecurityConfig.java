@@ -1,9 +1,15 @@
 package com.github.dylanz666.config;
 
+import com.github.dylanz666.constant.UserTypeEnum;
+import com.github.dylanz666.domain.AuthorizationException;
 import com.github.dylanz666.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.jackson.JsonObjectDeserializer;
+import org.springframework.boot.jackson.JsonObjectSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -15,6 +21,12 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
+import javax.servlet.Servlet;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
+import java.util.stream.Stream;
+
 /**
  * @author : dylanz
  * @since : 08/30/2020
@@ -24,13 +36,18 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
+    @Autowired
+    private AuthorizationException authorizationException;
 
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .authorizeRequests()
-                .antMatchers("/", "/home.html").permitAll()//这2个url不用访问认证
-                .anyRequest().authenticated()//其他url都需要访问认证
+                .antMatchers("/", "/home.html", "/ping", "/global/**", "/static/**", "/20200907.jpg").permitAll()//这5个url不用访问认证
+                .antMatchers("/admin/**").hasRole(UserTypeEnum.ADMIN.toString())
+                .antMatchers("/user/**").hasRole(UserTypeEnum.USER.toString())
+                .anyRequest()
+                .authenticated()//其他url都需要访问认证
                 .and()
                 .formLogin()
                 .loginPage("/login.html")//登录页面的url
@@ -38,7 +55,39 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .permitAll()//login.html和login不需要访问认证
                 .and()
                 .logout()
-                .permitAll();//logout不需要访问认证
+                .permitAll()//logout不需要访问认证
+                .and()
+                .csrf()
+                .disable()
+                .exceptionHandling()
+                .accessDeniedHandler(((httpServletRequest, httpServletResponse, e) -> {
+                    httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    httpServletResponse.setContentType("application/json");
+                    authorizationException.setCode(HttpServletResponse.SC_FORBIDDEN);
+                    authorizationException.setStatus("FAIL");
+                    authorizationException.setMessage("FORBIDDEN");
+                    authorizationException.setUri(httpServletRequest.getRequestURI());
+                    PrintWriter printWriter = httpServletResponse.getWriter();
+                    printWriter.write(authorizationException.toString());
+                    printWriter.flush();
+                    printWriter.close();
+                }))
+                .authenticationEntryPoint((httpServletRequest, httpServletResponse, e) -> {
+                    if (httpServletRequest.getRequestURI().equals("/hello.html")) {
+                        httpServletResponse.sendRedirect("/login.html");
+                        return;
+                    }
+                    httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    httpServletResponse.setContentType("application/json");
+                    authorizationException.setCode(HttpServletResponse.SC_UNAUTHORIZED);
+                    authorizationException.setStatus("FAIL");
+                    authorizationException.setUri(httpServletRequest.getRequestURI());
+                    authorizationException.setMessage("UNAUTHORIZED");
+                    PrintWriter printWriter = httpServletResponse.getWriter();
+                    printWriter.write(authorizationException.toString());
+                    printWriter.flush();
+                    printWriter.close();
+                });
         httpSecurity.userDetailsService(userDetailsService());
         httpSecurity.userDetailsService(userDetailsService);
     }
@@ -50,17 +99,17 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         UserDetails dylanz =
                 User.withUsername("dylanz")
                         .password(bCryptPasswordEncoder.encode("666"))
-                        .roles("ADMIN")
+                        .roles(UserTypeEnum.ADMIN.toString())
                         .build();
         UserDetails ritay =
                 User.withUsername("ritay")
                         .password(bCryptPasswordEncoder.encode("888"))
-                        .roles("USER")
+                        .roles(UserTypeEnum.USER.toString())
                         .build();
         UserDetails jonathanw =
                 User.withUsername("jonathanw")
                         .password(bCryptPasswordEncoder.encode("999"))
-                        .roles("USER")
+                        .roles(UserTypeEnum.USER.toString())
                         .build();
         return new InMemoryUserDetailsManager(dylanz, ritay, jonathanw);
     }
@@ -68,5 +117,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public RoleHierarchy roleHierarchy() {
+        RoleHierarchyImpl roleHierarchy = new RoleHierarchyImpl();
+        roleHierarchy.setHierarchy("ROLE_" + UserTypeEnum.ADMIN.toString() + " > ROLE_" + UserTypeEnum.USER.toString());
+        return roleHierarchy;
     }
 }
