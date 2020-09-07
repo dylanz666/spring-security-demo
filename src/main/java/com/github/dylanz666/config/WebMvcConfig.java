@@ -1,6 +1,7 @@
 package com.github.dylanz666.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
@@ -11,8 +12,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @since : 08/30/2020
  */
 @Configuration
-public class WebMvcConfig extends WebMvcConfigurationSupport {
-    @Override
+public class WebMvcConfig implements WebMvcConfigurer {
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/home.html").setViewName("home");
         registry.addViewController("/").setViewName("home");
@@ -20,7 +20,6 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
         registry.addViewController("/login.html").setViewName("login");
     }
 
-    @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/**").addResourceLocations("classpath:/static/");
     }
