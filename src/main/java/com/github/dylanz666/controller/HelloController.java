@@ -9,22 +9,22 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class HelloController {
-    @GetMapping("/hello")
+    @GetMapping("/hello")//任何角色登录均可访问；
     public String sayHello() {
         return "Hello!";
     }
 
-    @GetMapping("/ping")
+    @GetMapping("/ping")//无需登录即可访问；
     public String ping() {
         return "Success!";
     }
 
-    @GetMapping("/admin/hello")
+    @GetMapping("/admin/hello")//ADMIN角色登录方可访问；
     public String adminHello() {
         return "Hello admin!";
     }
 
-    @GetMapping("/user/hello")
+    @GetMapping("/user/hello")//USER及比USER权限大的角色登录方可访问；
     public String userHello() {
         return "Hello user!";
     }
