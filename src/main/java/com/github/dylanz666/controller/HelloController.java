@@ -1,5 +1,7 @@
 package com.github.dylanz666.controller;
 
+import com.github.dylanz666.constant.UserTypeEnum;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,5 +29,23 @@ public class HelloController {
     @GetMapping("/user/hello")//USER及比USER权限大的角色登录方可访问；
     public String userHello() {
         return "Hello user!";
+    }
+
+    @GetMapping("/controller/hello")
+    @PreAuthorize(value="isAuthenticated()")//任何角色登录均可访问；
+    public String controllerAnyHello() {
+        return "Hello controller any!";
+    }
+
+    @GetMapping("/controller/admin/hello")
+    @PreAuthorize("hasRole('ADMIN')")//ADMIN角色登录方可访问；
+    public String controllerAdminHello() {
+        return "Hello controller admin!";
+    }
+
+    @GetMapping("/controller/both/hello")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")//ADMIN或USER角色登录方可访问；
+    public String controllerBothHello() {
+        return "Hello controller both!";
     }
 }
